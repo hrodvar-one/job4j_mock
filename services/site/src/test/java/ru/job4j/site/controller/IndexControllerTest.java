@@ -17,11 +17,12 @@ import ru.job4j.site.dto.TopicDTO;
 import ru.job4j.site.service.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -48,20 +49,21 @@ class IndexControllerTest {
     private AuthService authService;
     @MockBean
     private NotificationService notificationService;
+    @MockBean
+    private ProfilesService profilesService;
 
     private IndexController indexController;
 
     @BeforeEach
     void initTest() {
         this.indexController = new IndexController(
-                categoriesService, interviewsService, authService, notificationService
+                categoriesService, interviewsService, authService, notificationService, profilesService
         );
     }
 
     @Test
     void whenGetIndexPageThenReturnIndex() throws Exception {
         this.mockMvc.perform(get("/"))
-                
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"));
     }
@@ -71,12 +73,15 @@ class IndexControllerTest {
         var topicDTO1 = new TopicDTO();
         topicDTO1.setId(1);
         topicDTO1.setName("topic1");
+
         var topicDTO2 = new TopicDTO();
         topicDTO2.setId(2);
         topicDTO2.setName("topic2");
+
         var cat1 = new CategoryDTO(1, "name1");
         var cat2 = new CategoryDTO(2, "name2");
         var listCat = List.of(cat1, cat2);
+
         var firstInterview = new InterviewDTO(1, 1, 1, 1,
                 "interview1", "description1", "contact1",
                 "30.02.2024", "09.10.2023", 1);
@@ -84,13 +89,17 @@ class IndexControllerTest {
                 "interview2", "description2", "contact2",
                 "30.02.2024", "09.10.2023", 1);
         var listInterviews = List.of(firstInterview, secondInterview);
+
         when(topicsService.getByCategory(cat1.getId())).thenReturn(List.of(topicDTO1));
         when(topicsService.getByCategory(cat2.getId())).thenReturn(List.of(topicDTO2));
         when(categoriesService.getMostPopular()).thenReturn(listCat);
         when(interviewsService.getByType(1)).thenReturn(listInterviews);
+        when(profilesService.getProfileById(anyInt())).thenReturn(Optional.empty());
+
         var listBread = List.of(new Breadcrumb("Главная", "/"));
         var model = new ConcurrentModel();
         var view = indexController.getIndexPage(model, null);
+
         var actualCategories = model.getAttribute("categories");
         var actualBreadCrumbs = model.getAttribute("breadcrumbs");
         var actualUserInfo = model.getAttribute("userInfo");
