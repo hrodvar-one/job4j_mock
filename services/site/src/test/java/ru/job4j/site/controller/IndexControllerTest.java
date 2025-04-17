@@ -92,7 +92,7 @@ class IndexControllerTest {
 
         when(topicsService.getByCategory(cat1.getId())).thenReturn(List.of(topicDTO1));
         when(topicsService.getByCategory(cat2.getId())).thenReturn(List.of(topicDTO2));
-        when(categoriesService.getMostPopular()).thenReturn(listCat);
+        when(categoriesService.getAllWithTopicsAndNewInterviews()).thenReturn(listCat);
         when(interviewsService.getByType(1)).thenReturn(listInterviews);
         when(profilesService.getProfileById(anyInt())).thenReturn(Optional.empty());
 

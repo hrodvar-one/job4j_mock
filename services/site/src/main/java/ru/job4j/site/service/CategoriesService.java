@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.job4j.site.dto.CategoryDTO;
+import ru.job4j.site.dto.TopicDTO;
 
 import java.util.List;
 
@@ -13,12 +14,27 @@ import java.util.List;
 @Service
 public class CategoriesService {
     private final TopicsService topicsService;
+    private final InterviewsService interviewsService;
 
     public List<CategoryDTO> getAll() throws JsonProcessingException {
         var text = new RestAuthCall("http://localhost:9902/categories/").get();
         var mapper = new ObjectMapper();
         return mapper.readValue(text, new TypeReference<>() {
         });
+    }
+
+    public List<CategoryDTO> getAllWithTopicsAndNewInterviews() throws JsonProcessingException {
+        List<CategoryDTO> categoriesDTO = getAll();
+        for (CategoryDTO categoryDTO : categoriesDTO) {
+            List<TopicDTO> topics = topicsService.getByCategory(categoryDTO.getId());
+            categoryDTO.setTopicsSize(topics.size());
+            int newInterviewsCount = 0;
+            for (TopicDTO topic : topics) {
+                newInterviewsCount += interviewsService.countNewInterviewsByTopicId(topic.getId());
+            }
+            categoryDTO.setCountNewInterviews(newInterviewsCount);
+        }
+        return categoriesDTO;
     }
 
     public List<CategoryDTO> getPopularFromDesc() throws JsonProcessingException {
